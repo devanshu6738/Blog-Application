@@ -65,6 +65,54 @@ app.delete('/blog/:id',(req,res)=>{
     
 })
 
+
+let user=[];
+
+app.post("/user",(req,res)=>{
+    try {
+        const {name,email,password}=req.body;
+    if(!name || !email || !password){
+        res.status(404).json({
+            success:"false",
+            msg:"please enter all the field"
+        })
+    }
+    user.push({...req.body,id: user.length +1});
+    return res.status(200).json({
+        success:true,
+        msg:"user successfully created"
+    })
+    } catch (error) {
+        res.status(500).json({msg:"Internal server error"})
+    }
+})
+
+app.get("/user",(req,res)=>{
+    try {
+        res.status(200).json({
+            success:true,
+            msg:"user fetched successfully",
+            user
+        })
+    } catch (error) {
+        res.status(500).json({msg:"Internal server error"})
+    }
+})
+app.get("/user/:id",(req,res)=>{
+    try {
+        const id=req.params.id;
+        const data=user.filter(post=>post.id==id);
+        res.status(200).json({
+            success:true,
+            msg:"user fetched successfully",
+            data
+        })
+    } catch (error) {
+        res.status(500).json({msg:"Internal server error"})
+    }
+})
+
+
 app.listen(3000,()=>{
     console.log("Server is running at port 3000")
 })
