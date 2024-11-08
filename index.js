@@ -1,45 +1,38 @@
 const express=require("express");
 const app=express();
-
+const mongoose=require("mongoose");
 app.use(express.json())
+const url="mongodb://localhost:27017/BlogApp"
+mongoose.connect(url);
+const db=mongoose.connection;
 
-const blog=[
-    {
-        "id": 1,
-        "title": "Understanding JavaScript Basics",
-        "content": "JavaScript is a powerful language for web development. In this article, we will explore the basics of JavaScript...",
-        "draft": false,
-        "author": "Amit Sharma"
-      },
-      {
-        "id": 2,
-        "title": "Introduction to Web Development",
-        "content": "Web development involves creating websites and web applications. This guide will cover the essential aspects...",
-        "draft": true,
-        "author": "Neha Verma"
-      },
-      {
-        "id": 3,
-        "title": "How to Use Git and GitHub",
-        "content": "Git and GitHub are essential tools for developers. In this post, we'll go over how to use Git for version control...",
-        "draft": false,
-        "author": "Rahul Singh"
-      },
-      {
-        "id": 4,
-        "title": "Building a Simple To-Do App with JavaScript",
-        "content": "Creating a to-do app is a great way to practice JavaScript skills. Here’s a step-by-step guide...",
-        "draft": true,
-        "author": "Priya Jain"
-      },
-      {
-        "id": 5,
-        "title": "Exploring CSS Flexbox for Layouts",
-        "content": "CSS Flexbox is a powerful layout tool that makes it easier to design responsive layouts. This article dives into...",
-        "draft": false,
-        "author": "Vikas Kumar"
-      }
-];
+db.on("connected",()=>{
+    console.log("Mongodb server is connected")
+})
+db.on("disconnected",()=>{
+    console.log("Mongodb server is disconnected")
+})
+db.on("error",(error)=>{
+    console.log(error)
+})
+
+const userSchema=new mongoose.Schema({
+    name:{
+        type:String,
+        required:true
+    },
+    email:{
+        type:String,
+        required:true,
+        unique:true,
+    },
+    password:{
+        type:String,
+        required:true,
+    }
+})
+const user=mongoose.model("user",userSchema)
+
 
 app.post('/blog',(req,res)=>{
     const data=req.body;
@@ -66,22 +59,24 @@ app.delete('/blog/:id',(req,res)=>{
 })
 
 
-let user=[];
-
-app.post("/user",(req,res)=>{
+app.post("/user",async(req,res)=>{
     try {
         const {name,email,password}=req.body;
     if(!name || !email || !password){
-        res.status(404).json({
+        return res.status(404).json({
             success:"false",
             msg:"please enter all the field"
         })
     }
-    user.push({...req.body,id: user.length +1});
-    return res.status(200).json({
-        success:true,
-        msg:"user successfully created"
-    })
+    const data=req.body;
+    const checkExistedUser=await user.findOne({email:data.email})
+    if(checkExistedUser){
+        res.status(400).json({msg:"user already exist"})
+    }
+    
+    const newUser=new user(data);
+    const response=await newUser.save();
+    return res.status(200).json({msg:"data saved succesfully",response})
     } catch (error) {
         res.status(500).json({msg:"Internal server error"})
     }
