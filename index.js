@@ -82,25 +82,26 @@ app.post("/user",async(req,res)=>{
     }
 })
 
-app.get("/user",(req,res)=>{
+app.get("/user",async(req,res)=>{
     try {
+        const users=await user.find({});
         res.status(200).json({
             success:true,
             msg:"user fetched successfully",
-            user
+            users,
         })
     } catch (error) {
         res.status(500).json({msg:"Internal server error"})
     }
 })
-app.get("/user/:id",(req,res)=>{
+app.get("/user/:id",async(req,res)=>{
     try {
         const id=req.params.id;
-        const data=user.filter(post=>post.id==id);
+       const users=await user.findOne({email:id})
         res.status(200).json({
             success:true,
             msg:"user fetched successfully",
-            data
+            users
         })
     } catch (error) {
         res.status(500).json({msg:"Internal server error"})
