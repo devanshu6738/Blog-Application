@@ -3,7 +3,7 @@ const app=express();
 const db=require("./config/dbConnect")
 app.use(express.json())
 const userRoutes=require("./routes/userRoutes")
-const blogRoutes=require("./routes/userRoutes")
+const blogRoutes=require("./routes/blogRoutes")
 
 app.use("/user",userRoutes);
 app.use("/blog",blogRoutes)
