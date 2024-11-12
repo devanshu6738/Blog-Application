@@ -1,5 +1,5 @@
 const user=require("../models/userSchema")
-
+const blog=require("../models/blogSchema")
 async function CreateUser(req,res){
     try {
         const {name,email,password}=req.body;

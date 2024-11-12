@@ -1,6 +1,7 @@
 const Blog=require("../models/blogSchema")
+const user=require('../models/userSchema')
 async function CreateBlog(req,res){
-    const{title,description,draft}=req.body;
+    const{title,description,draft,creator}=req.body;
     try {
         if(!title){
             return res.status(400).json({msg:"Please Enter a Title"})
@@ -8,7 +9,11 @@ async function CreateBlog(req,res){
         if(!description){
             return res.status(400).json({msg:"Please Enter a Description"})
         }
-        const data=await Blog.create({title,description})
+        const findUser=await user.findById(creator);
+        if(!findUser){
+            return res.status(400).json({msg:"user not found"})
+        }
+        const data=await Blog.create({title,description,draft,creator})
         res.status(200).json(data)
     } catch (error) {
         console.log(error);
