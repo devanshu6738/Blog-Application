@@ -14,6 +14,7 @@ async function CreateBlog(req,res){
             return res.status(400).json({msg:"user not found"})
         }
         const data=await Blog.create({title,description,draft,creator})
+        await user.findByIdAndUpdate(creator,{$push:{blog:blog._id}})
         res.status(200).json(data)
     } catch (error) {
         console.log(error);

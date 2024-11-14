@@ -17,6 +17,7 @@ const BlogSchema=new mongoose.Schema({
     creator:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"user",
+        required:"true"
     }
 },{timestamps:true})
 
