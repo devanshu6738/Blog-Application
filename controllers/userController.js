@@ -1,6 +1,7 @@
 const user=require("../models/userSchema")
 const blog=require("../models/blogSchema")
 const bcrypt=require("bcrypt");
+const {generatejwt} = require("../utils/jwt");
 async function CreateUser(req,res){
     try {
         const {name,email,password}=req.body;
@@ -23,7 +24,9 @@ async function CreateUser(req,res){
         password:hashedpass,
     });
     const response=await newUser.save();
-    return res.status(200).json({msg:"data saved succesfully",response})
+    let token=generatejwt({email:newUser.email,id:newUser._id})
+
+    return res.status(200).json({msg:"data saved succesfully",response,token})
     } catch (error) {
         return res.status(500).json({msg:"Internal server error"})
     }

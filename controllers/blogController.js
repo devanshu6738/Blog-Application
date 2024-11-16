@@ -1,26 +1,41 @@
 const Blog=require("../models/blogSchema")
-const user=require('../models/userSchema')
-async function CreateBlog(req,res){
-    const{title,description,draft,creator}=req.body;
+const user=require('../models/userSchema');
+const { verifyjwt } = require("../utils/jwt");
+
+async function CreateBlog(req, res) {
     try {
-        if(!title){
-            return res.status(400).json({msg:"Please Enter a Title"})
+        if (!req.body.token) {
+            return res.status(401).json({ msg: "Please sign in" });
         }
-        if(!description){
-            return res.status(400).json({msg:"Please Enter a Description"})
+        const isValid = await verifyjwt(req.body.token); 
+        if (!isValid) {
+            return res.status(401).json({ msg: "Invalid token. Please sign in again." });
         }
-        const findUser=await user.findById(creator);
-        if(!findUser){
-            return res.status(400).json({msg:"user not found"})
+
+        const { title, description, draft, creator } = req.body
+        if (!title) {
+            return res.status(400).json({ msg: "Please enter a title" });
         }
-        const data=await Blog.create({title,description,draft,creator})
-        await user.findByIdAndUpdate(creator,{$push:{blog:blog._id}})
-        res.status(200).json(data)
+        if (!description) {
+            return res.status(400).json({ msg: "Please enter a description" });
+        }
+
+        const findUser = await user.findById(creator);
+        if (!findUser) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        const data = await Blog.create({ title, description, draft, creator });
+
+        await user.findByIdAndUpdate(creator, { $push: { blog: data._id } });
+
+        return res.status(201).json(data);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({msg:"Internal Server error"})
+        console.error(error);
+        res.status(500).json({ msg: "Internal Server Error" });
     }
 }
+
 async function GetBlogs(req,res){
     try {
         const data=await Blog.find({});
