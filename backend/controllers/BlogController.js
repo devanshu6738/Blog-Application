@@ -1,14 +1,25 @@
-const BlogModel=require("../models/BlogSchema")
+const BlogModel=require("../models/BlogSchema");
+const User = require("../models/UserSchema");
+const UserModel=require("../models/UserSchema")
 
 async function CreateBlog(req,res){
-    let{title,description,draft,author}=req.body;
+    let{title,description,draft,creator}=req.body;
     try {
+        
+        const findUser=UserModel.findById(creator)
+        if(!findUser){
+            res.status(400).json({
+                success:false,
+                message:"Invalid User"
+            })
+        }
         let CreateBlog=await BlogModel.create({
             title,
             description,
             draft,
-            author
+            creator
         })
+        await UserModel.findByIdAndUpdate(creator,{$push:{blogs:BlogModel._id}})
         return res.status(200).json({
             success:true,
             message:"Blog Created Successfully",
@@ -61,9 +72,10 @@ async function DeleteBlog(req,res){
 }
 async function UpdateBlog(req,res){
     try {
-        const{title,description,draft,author}=req.body;
+        const{title,description,draft,creator}=req.body;
+        console.log(req.body)
         const {id}=req.params;
-        const UpateBlog=await BlogModel.findByIdAndUpdate(id,{title,description,draft,author},{new:true})
+        const UpateBlog=await BlogModel.findByIdAndUpdate(id,{title,description,draft,creator},{new:true})
         return res.status(200).json({
             success:true,
             message:"User Updated Successfully",

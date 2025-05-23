@@ -1,9 +1,12 @@
 const UserModel=require("../models/UserSchema")
+const bcrypt=require("bcrypt");
+const {generateJwt,isVrifyToken, isVerifyToken} = require("../utils/generateToken");
 
 async function CreateUser(req,res){
     let {name,password,email}=req.body;
     
     try {
+        let isValid=isVerifyToken(token);
             if(!name){
                 return res.json({
                     success:false,
@@ -23,16 +26,75 @@ async function CreateUser(req,res){
                 })
                 
             }
+            const checkForexistingUser=await UserModel.findOne({email})
+            if(checkForexistingUser){
+                return res.status(400).json({
+                    success:false,
+                    message:"User already registered with this email"
+                })
+            }
+            let salt=await bcrypt.genSalt(10)
+            const hashedPass=await bcrypt.hash(password,salt)
             const newUser=await UserModel.create({
                     name,
                     email,
-                    password,
+                    password:hashedPass,
                 })
-        
+            let token=await generateJwt({email:newUser.email,id:newUser._id})
         return res.status(200).json({
             success:true,
             message:"User created Successfully",
-            newUser
+            User:{
+                name:newUser.name,
+                email:newUser.email,
+                blog:newUser.blogs,
+                token
+            }
+        })
+
+    } catch (error) {
+        return res.status(400).json({
+            success:false,
+            message:"Please Try again",
+            error
+        })
+    }
+}
+
+async function LoginUser(req,res){
+    let {password,email}=req.body;
+    
+    try {
+            if(!email){
+                return res.json({
+                    success:false,
+                    message:"Enter your email"
+                })
+            }
+            if(!password){
+                return res.json({
+                    success:false,
+                    message:"Enter your password"
+                })
+                
+            }
+            const checkForexistingUser=await UserModel.findOne({email})
+            if(!checkForexistingUser){
+                return res.status(400).json({
+                    success:false,
+                    message:"User not exist"
+                })
+            }
+        let CheckForPass=await bcrypt.compare(password,checkForexistingUser.password)
+        if(CheckForPass==false){
+            return res.status(400).json({
+                success:false,
+                message:"Your Password is Incorrect"
+            })
+        }
+        return res.status(200).json({
+            success:true,
+            message:"User Logged In Successfully",
         })
 
     } catch (error) {
@@ -119,4 +181,4 @@ async function DeleteUser(req,res){
         })
     }
 }
-module.exports={CreateUser,GetUser,GetUserById,UpdateUser,UpdateUser,DeleteUser}
+module.exports={CreateUser,GetUser,GetUserById,UpdateUser,UpdateUser,DeleteUser,LoginUser}
